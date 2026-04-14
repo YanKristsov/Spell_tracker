@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -352,145 +353,271 @@
         </div>
     </div>
 
-    <script>
-        (function() {
-            // === НОВЫЙ ТРЕКЕР (без иконок) ===
-            const circlesData = [];
+<script>
+    (function() {
+        // Ключи для localStorage
+        const STORAGE_SPELLS = 'trackerSpells';
+        const STORAGE_TABLE_CHECKBOXES = 'trackerTableCheckboxes';
+        const STORAGE_TABLE_TEXTS = 'trackerTableTexts';
 
-            // 1. Фокусировка
-            circlesData.push({
-                title: 'Фокусировка',
-                spells: [{ slots: 1 }, { slots: 1 }]
+        // ========== ФУНКЦИИ СОХРАНЕНИЯ И ЗАГРУЗКИ ==========
+        
+        // Сохраняет состояние ВСЕХ слотов заклинаний
+        function saveSpellSlots() {
+            const slots = [];
+            document.querySelectorAll('#spellTracker .slot').forEach((slot, index) => {
+                slots.push({
+                    index: index,
+                    checked: slot.classList.contains('checked')
+                });
             });
+            localStorage.setItem(STORAGE_SPELLS, JSON.stringify(slots));
+        }
 
-            // 2. Круги 1..8
-            for (let circle = 1; circle <= 8; circle++) {
-                const spells = [];
-                for (let s = 1; s <= 3; s++) spells.push({ slots: 1 });
-                circlesData.push({ title: `Круг ${circle}`, spells: spells });
+        // Загружает состояние слотов заклинаний
+        function loadSpellSlots() {
+            const saved = localStorage.getItem(STORAGE_SPELLS);
+            if (!saved) return;
+            try {
+                const slots = JSON.parse(saved);
+                const allSlots = document.querySelectorAll('#spellTracker .slot');
+                slots.forEach(item => {
+                    if (item.index < allSlots.length && item.checked) {
+                        allSlots[item.index].classList.add('checked');
+                    }
+                });
+            } catch (e) {
+                console.error('Ошибка загрузки слотов:', e);
             }
+        }
 
-            // 3. Круг 9
-            circlesData.push({
-                title: 'Круг 9',
-                spells: [{ slots: 1 }, { slots: 1 }]
+        // Сохраняет состояние галочек в таблице
+        function saveTableCheckboxes() {
+            const checkboxes = [];
+            document.querySelectorAll('.container .circle-checkbox').forEach((cb, index) => {
+                checkboxes.push({
+                    index: index,
+                    checked: cb.classList.contains('checked')
+                });
             });
+            localStorage.setItem(STORAGE_TABLE_CHECKBOXES, JSON.stringify(checkboxes));
+        }
 
-            const spellContainer = document.getElementById('spellTracker');
-            if (spellContainer) {
-                function buildSpellTracker() {
-                    spellContainer.innerHTML = '';
+        // Загружает состояние галочек в таблице
+        function loadTableCheckboxes() {
+            const saved = localStorage.getItem(STORAGE_TABLE_CHECKBOXES);
+            if (!saved) return;
+            try {
+                const checkboxes = JSON.parse(saved);
+                const allCb = document.querySelectorAll('.container .circle-checkbox');
+                checkboxes.forEach(item => {
+                    if (item.index < allCb.length && item.checked) {
+                        allCb[item.index].classList.add('checked');
+                    }
+                });
+            } catch (e) {
+                console.error('Ошибка загрузки галочек таблицы:', e);
+            }
+        }
 
-                    // основные круги
-                    circlesData.forEach(circle => {
-                        const card = document.createElement('div');
-                        card.className = 'circle-card';
+        // Сохраняет текст из всех textarea в таблице
+        function saveTableTexts() {
+            const texts = [];
+            document.querySelectorAll('.container .text-cell').forEach((ta, index) => {
+                texts.push({
+                    index: index,
+                    value: ta.value
+                });
+            });
+            localStorage.setItem(STORAGE_TABLE_TEXTS, JSON.stringify(texts));
+        }
 
-                        const header = document.createElement('div');
-                        header.className = 'circle-header';
-                        header.textContent = circle.title; // только текст, без иконок
-                        card.appendChild(header);
+        // Загружает текст в textarea таблицы
+        function loadTableTexts() {
+            const saved = localStorage.getItem(STORAGE_TABLE_TEXTS);
+            if (!saved) return;
+            try {
+                const texts = JSON.parse(saved);
+                const allTa = document.querySelectorAll('.container .text-cell');
+                texts.forEach(item => {
+                    if (item.index < allTa.length) {
+                        allTa[item.index].value = item.value;
+                        // Подгоняем высоту
+                        allTa[item.index].style.height = 'auto';
+                        allTa[item.index].style.height = allTa[item.index].scrollHeight + 'px';
+                    }
+                });
+            } catch (e) {
+                console.error('Ошибка загрузки текста таблицы:', e);
+            }
+        }
 
-                        const row = document.createElement('div');
-                        row.className = 'spells-row';
+        // Сохраняет ВСЁ
+        function saveAll() {
+            saveSpellSlots();
+            saveTableCheckboxes();
+            saveTableTexts();
+        }
 
-                        circle.spells.forEach(spell => {
-                            const spellDiv = document.createElement('div');
-                            spellDiv.className = 'spell-item';
+        // Загружает ВСЁ
+        function loadAll() {
+            loadSpellSlots();
+            loadTableCheckboxes();
+            loadTableTexts();
+        }
 
-                            const slotGroup = document.createElement('div');
-                            slotGroup.className = 'slot-group';
+        // ========== ПОСТРОЕНИЕ ТРЕКЕРА ЗАКЛИНАНИЙ ==========
+        const circlesData = [];
 
-                            for (let i = 0; i < spell.slots; i++) {
-                                const slot = document.createElement('div');
-                                slot.className = 'slot';
-                                slot.addEventListener('click', function(e) {
-                                    e.stopPropagation();
-                                    this.classList.toggle('checked');
-                                });
-                                slotGroup.appendChild(slot);
-                            }
+        // 1. Фокусировка
+        circlesData.push({
+            title: 'Фокусировка',
+            spells: [{ slots: 1 }, { slots: 1 }]
+        });
 
-                            spellDiv.appendChild(slotGroup);
-                            row.appendChild(spellDiv);
-                        });
+        // 2. Круги 1..8
+        for (let circle = 1; circle <= 8; circle++) {
+            const spells = [];
+            for (let s = 1; s <= 3; s++) spells.push({ slots: 1 });
+            circlesData.push({ title: `Круг ${circle}`, spells: spells });
+        }
 
-                        card.appendChild(row);
-                        spellContainer.appendChild(card);
-                    });
+        // 3. Круг 9
+        circlesData.push({
+            title: 'Круг 9',
+            spells: [{ slots: 1 }, { slots: 1 }]
+        });
 
-                    // исцеление
-                    const healCard = document.createElement('div');
-                    healCard.className = 'circle-card';
-                    const healHeader = document.createElement('div');
-                    healHeader.className = 'circle-header';
-                    healHeader.textContent = 'Исцеление (круг 9)';
-                    healCard.appendChild(healHeader);
+        const spellContainer = document.getElementById('spellTracker');
+        if (spellContainer) {
+            function buildSpellTracker() {
+                spellContainer.innerHTML = '';
 
-                    const healInner = document.createElement('div');
-                    healInner.className = 'healing-section';
-                    const healGrid = document.createElement('div');
-                    healGrid.className = 'healing-grid';
+                circlesData.forEach(circle => {
+                    const card = document.createElement('div');
+                    card.className = 'circle-card';
 
-                    for (let h = 1; h <= 7; h++) {
+                    const header = document.createElement('div');
+                    header.className = 'circle-header';
+                    header.textContent = circle.title;
+                    card.appendChild(header);
+
+                    const row = document.createElement('div');
+                    row.className = 'spells-row';
+
+                    circle.spells.forEach(spell => {
                         const spellDiv = document.createElement('div');
                         spellDiv.className = 'spell-item';
+
                         const slotGroup = document.createElement('div');
                         slotGroup.className = 'slot-group';
-                        const slot = document.createElement('div');
-                        slot.className = 'slot';
-                        slot.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            this.classList.toggle('checked');
-                        });
-                        slotGroup.appendChild(slot);
-                        spellDiv.appendChild(slotGroup);
-                        healGrid.appendChild(spellDiv);
-                    }
 
-                    healInner.appendChild(healGrid);
-                    healCard.appendChild(healInner);
-                    spellContainer.appendChild(healCard);
+                        for (let i = 0; i < spell.slots; i++) {
+                            const slot = document.createElement('div');
+                            slot.className = 'slot';
+                            
+                            // При клике: переключаем класс и СОХРАНЯЕМ
+                            slot.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                this.classList.toggle('checked');
+                                saveAll(); // <-- СОХРАНЕНИЕ
+                            });
+                            
+                            slotGroup.appendChild(slot);
+                        }
+
+                        spellDiv.appendChild(slotGroup);
+                        row.appendChild(spellDiv);
+                    });
+
+                    card.appendChild(row);
+                    spellContainer.appendChild(card);
+                });
+
+                // Исцеление
+                const healCard = document.createElement('div');
+                healCard.className = 'circle-card';
+                const healHeader = document.createElement('div');
+                healHeader.className = 'circle-header';
+                healHeader.textContent = 'Исцеление (круг 9)';
+                healCard.appendChild(healHeader);
+
+                const healInner = document.createElement('div');
+                healInner.className = 'healing-section';
+                const healGrid = document.createElement('div');
+                healGrid.className = 'healing-grid';
+
+                for (let h = 1; h <= 7; h++) {
+                    const spellDiv = document.createElement('div');
+                    spellDiv.className = 'spell-item';
+                    const slotGroup = document.createElement('div');
+                    slotGroup.className = 'slot-group';
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    
+                    slot.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        this.classList.toggle('checked');
+                        saveAll(); // <-- СОХРАНЕНИЕ
+                    });
+                    
+                    slotGroup.appendChild(slot);
+                    spellDiv.appendChild(slotGroup);
+                    healGrid.appendChild(spellDiv);
                 }
 
-                buildSpellTracker();
-
-                document.getElementById('resetSpellBtn')?.addEventListener('click', function() {
-                    document.querySelectorAll('#spellTracker .slot').forEach(slot => {
-                        slot.classList.remove('checked');
-                    });
-                });
+                healInner.appendChild(healGrid);
+                healCard.appendChild(healInner);
+                spellContainer.appendChild(healCard);
             }
 
-            // === ПРОШЛЫЙ ТРЕКЕР (таблица) + кнопка сброса ===
-            const tableCheckboxes = document.querySelectorAll('.container .circle-checkbox');
-            const tableTextareas = document.querySelectorAll('.container .text-cell');
+            buildSpellTracker();
 
-            // клик по кружкам
-            tableCheckboxes.forEach(cb => {
-                cb.addEventListener('click', function() {
-                    this.classList.toggle('checked');
+            // Кнопка сброса для заклинаний
+            document.getElementById('resetSpellBtn')?.addEventListener('click', function() {
+                document.querySelectorAll('#spellTracker .slot').forEach(slot => {
+                    slot.classList.remove('checked');
                 });
+                saveAll(); // <-- СОХРАНЯЕМ ПОСЛЕ СБРОСА
             });
+        }
 
-            // авто resize
+        // ========== ТАБЛИЦА ==========
+        const tableCheckboxes = document.querySelectorAll('.container .circle-checkbox');
+        const tableTextareas = document.querySelectorAll('.container .text-cell');
+
+        // Галочки в таблице
+        tableCheckboxes.forEach(cb => {
+            cb.addEventListener('click', function() {
+                this.classList.toggle('checked');
+                saveAll(); // <-- СОХРАНЕНИЕ
+            });
+        });
+
+        // Текстовые поля в таблице
+        tableTextareas.forEach(ta => {
+            ta.style.height = '35px';
+            ta.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                saveAll(); // <-- СОХРАНЕНИЕ ПРИ ВВОДЕ
+            });
+        });
+
+        // Кнопка сброса таблицы
+        document.getElementById('resetTableBtn')?.addEventListener('click', function() {
+            tableCheckboxes.forEach(cb => cb.classList.remove('checked'));
             tableTextareas.forEach(ta => {
+                ta.value = '';
                 ta.style.height = '35px';
-                ta.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                });
             });
+            saveAll(); // <-- СОХРАНЯЕМ ПОСЛЕ СБРОСА
+        });
 
-            // сброс таблицы: убрать checked со всех кружков и очистить textarea
-            document.getElementById('resetTableBtn')?.addEventListener('click', function() {
-                tableCheckboxes.forEach(cb => cb.classList.remove('checked'));
-                tableTextareas.forEach(ta => {
-                    ta.value = '';
-                    ta.style.height = '35px'; // возвращаем высоту
-                });
-            });
-        })();
-    </script>
+        // ========== ЗАГРУЗКА ПРИ СТАРТЕ ==========
+        loadAll();
+
+    })();
+</script>
 </body>
 </html>
