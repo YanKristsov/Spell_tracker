@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трекеры · без иконок + сброс</title>
+    <title>Трекеры · управление ячейками</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -27,87 +26,117 @@
         .tracker-wrapper {
             width: 100%;
             max-width: 560px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
-        .container, .spell-container {
-            width: 100%;
+        /* общие стили карточек блоков */
+        .block-card {
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 18px 15px;
-            overflow-x: auto;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
         }
 
-        h1, h2 {
-            color: #475569;
-            font-size: 22px;
-            margin-bottom: 12px;
-            display: inline-block;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #cbd5e1;
-            width: 100%;
-            text-align: center;
+        /* шапка блока: заголовок + кнопка сброса в одной строке */
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 16px 20px 8px 20px;
+            border-bottom: 1px solid #eef2f6;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .block-header h1, 
+        .block-header h2 {
+            margin: 0;
+            padding: 0;
+            border: none;
+            text-align: left;
+            font-size: 1.4rem;
             font-weight: 600;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            width: auto;
+        }
+        .block-header h2 {
+            font-size: 1.25rem;
+        }
+        .reset-btn-top {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .reset-btn-top:hover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8;
+            transform: scale(0.97);
         }
 
-        h2 {
-            font-size: 20px;
-            margin-top: 5px;
+        /* контент внутри карточки */
+        .block-content {
+            padding: 10px 20px 20px 20px;
         }
 
-        /* стили для таблицы (полностью из оригинала) */
-        table {
+        /* таблица способностей */
+        .ability-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
-            min-width: 400px;
+            margin-top: 4px;
         }
-
-        th, td {
-            padding: 10px 8px;
+        .ability-table th, 
+        .ability-table td {
+            padding: 10px 6px;
             text-align: center;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e9edf2;
         }
-
-        th {
-            background-color: #f1f5f9;
-            color: #475569;
+        .ability-table th {
+            background-color: #f8fafc;
+            color: #334155;
             font-weight: 600;
-            border-bottom: 2px solid #cbd5e1;
-            font-size: 14px;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #dce3ec;
         }
-
         .text-cell {
             width: 100%;
-            min-height: 35px;
-            max-height: 120px;
-            padding: 6px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
+            min-height: 38px;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e6;
+            border-radius: 12px;
             resize: vertical;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 0.85rem;
             background-color: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            overflow-y: auto;
+            transition: 0.15s;
+            line-height: 1.4;
         }
-
         .text-cell:focus {
             outline: none;
-            border-color: #94a3b8;
-            box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+            border-color: #8192aa;
+            box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
         }
-
         .checkbox-container {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
         .circle-checkbox {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             border: 2px solid #94a3b8;
             background-color: #fff;
@@ -115,80 +144,64 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: 0.2s;
         }
-
         .circle-checkbox.checked {
             background-color: #94a3b8;
             border-color: #64748b;
         }
-
         .circle-checkbox.checked::after {
             content: "✓";
             color: white;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
         }
-
         .circle-checkbox:hover {
-            border-color: #64748b;
+            border-color: #4b5563;
             transform: scale(1.05);
         }
 
-        tr:hover {
-            background-color: #f8fafc;
-        }
-
-        /* НОВЫЙ ТРЕКЕР — без иконок в заголовках */
+        /* трекер заклинаний: сетка с кругами */
         .spell-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 14px;
+            margin-top: 6px;
         }
-
         .circle-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            border: 1px solid #ecf3f9;
+            border-radius: 18px;
             overflow: hidden;
+            transition: 0.1s;
         }
-
         .circle-header {
-            background-color: #f1f5f9;
-            padding: 10px 14px;
+            background-color: #f9fbfd;
+            padding: 10px 16px;
             font-weight: 600;
-            font-size: 15px;
-            color: #475569;
-            border-bottom: 1px solid #cbd5e1;
-            /* иконки удалены — не добавляем i */
+            font-size: 0.9rem;
+            color: #1e293b;
+            border-bottom: 1px solid #e9edf2;
         }
-
         .spells-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px 18px;
-            padding: 16px 18px;
+            gap: 18px;
+            padding: 14px 18px;
             align-items: center;
         }
-
         .spell-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: transparent;
-            border: none;
-            padding: 0;
         }
-
         .slot-group {
             display: flex;
-            gap: 6px;
+            gap: 8px;
         }
-
         .slot {
-            width: 22px;
-            height: 22px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             border: 2px solid #94a3b8;
             background-color: #fff;
@@ -196,159 +209,76 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 12px;
-            color: white;
+            transition: 0.15s;
         }
-
         .slot.checked {
             background-color: #94a3b8;
             border-color: #64748b;
         }
-
         .slot.checked::after {
             content: "✓";
             color: white;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: bold;
         }
-
         .slot:hover {
-            border-color: #64748b;
+            border-color: #4b5563;
             transform: scale(1.05);
         }
-
         .healing-section {
-            background-color: #f8fafc;
-            padding: 12px 16px 16px 16px;
+            background-color: #fefcf5;
+            padding: 12px 18px 18px 18px;
         }
-
         .healing-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px 18px;
+            gap: 16px;
         }
 
-        /* футер с кнопками */
-        .footer-control {
-            margin-top: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #64748b;
-            font-size: 13px;
-            border-top: 1px dashed #cbd5e1;
-            padding-top: 14px;
-            flex-wrap: wrap;
+        /* убираем старый футер и лишние подсказки */
+        .no-legend {
+            display: none;
         }
 
-        .reset-btn {
-            background: #fff;
-            border: 1px solid #94a3b8;
-            border-radius: 20px;
-            padding: 6px 18px;
-            font-size: 13px;
-            cursor: pointer;
-            color: #475569;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .reset-btn:hover {
-            background-color: #f1f5f9;
-            border-color: #64748b;
-        }
-
-        .instructions {
-            margin-top: 12px;
-            font-size: 13px;
-            color: #64748b;
-            text-align: center;
-        }
-
-        @media (max-width: 500px) {
-            .container, .spell-container { padding: 12px; }
-            table { min-width: 350px; }
+        @media (max-width: 520px) {
+            .block-content { padding: 12px 16px; }
+            .slot { width: 24px; height: 24px; }
         }
     </style>
 </head>
 <body>
-    <!-- НОВЫЙ ТРЕКЕР (БЕЗ ИКОНОК В ЗАГОЛОВКАХ) -->
+
+    <!-- БЛОК 1: Ячейки заклинаний (круги 1–9 + фокусы) -->
     <div class="tracker-wrapper">
-        <div class="spell-container">
-            <h2><i class="fas fa-magic"></i> Ячейки заклинаний (круги 1–9 + фокусы)</h2>
-            <div class="spell-grid" id="spellTracker"></div>
-            <div class="footer-control">
-                <span><i class="far fa-circle"></i> доступна · <i class="fas fa-check-circle" style="color:#475569;"></i> использована</span>
-                <button class="reset-btn" id="resetSpellBtn"><i class="fas fa-undo-alt"></i> Сбросить</button>
+        <div class="block-card">
+            <div class="block-header">
+                <h2><i class="fas fa-magic"></i> Ячейки заклинаний</h2>
+                <button class="reset-btn-top" id="resetSpellBtnTop"><i class="fas fa-undo-alt"></i> Сбросить всё</button>
+            </div>
+            <div class="block-content">
+                <div id="spellTracker" class="spell-grid"></div>
+                <!-- полностью убрана строка с легендой "доступна/использована" -->
             </div>
         </div>
     </div>
 
-    <!-- ПРОШЛЫЙ ТРЕКЕР (ТАБЛИЦА) + ДОБАВЛЕНА КНОПКА СБРОСА -->
+    <!-- БЛОК 2: Таблица способностей (с кнопкой сброса в шапке) -->
     <div class="tracker-wrapper">
-        <div class="container">
-            <h1><i class="fas fa-table"></i> Таблица способностей</h1>
-            <table>
-                <thead>
-                    <tr><th></th><th colspan="6">Минута</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25"></textarea></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                    </tr>
-                    <tr>
-                        <td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25"></textarea></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                    </tr>
-                    <tr>
-                        <td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25"></textarea></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                    </tr>
-                    <tr>
-                        <td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25"></textarea></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                    </tr>
-                    <tr>
-                        <td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25"></textarea></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                        <td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="footer-control" style="margin-top:20px;">
-                <span></span> <!-- пустой span для выравнивания -->
-                <button class="reset-btn" id="resetTableBtn"><i class="fas fa-undo-alt"></i> Сбросить таблицу</button>
+        <div class="block-card">
+            <div class="block-header">
+                <h1><i class="fas fa-table"></i> Таблица способностей</h1>
+                <button class="reset-btn-top" id="resetTableBtnTop"><i class="fas fa-undo-alt"></i> Сбросить всё</button>
             </div>
-            <div class="instructions">
-                <p><i class="fas fa-info-circle"></i> Нажмите на поля для текста и на кружки для отметки</p>
+            <div class="block-content">
+                <table class="ability-table">
+                    <thead>
+                        <tr><th></th><th colspan="6">Минута</th></tr>
+                    </thead>
+                    <tbody id="tableDynamicBody">
+                        <!-- строки таблицы будут сгенерированы через JS, чтобы удобно управлять -->
+                    </tbody>
+                </table>
+                <!-- удалены инструкции "Нажмите на поля..." и футер с лишним текстом -->
             </div>
         </div>
     </div>
@@ -356,267 +286,317 @@
 <script>
     (function() {
         // Ключи для localStorage
-        const STORAGE_SPELLS = 'trackerSpells';
-        const STORAGE_TABLE_CHECKBOXES = 'trackerTableCheckboxes';
-        const STORAGE_TABLE_TEXTS = 'trackerTableTexts';
+        const STORAGE_SPELLS = 'trackerSpells_clean';
+        const STORAGE_TABLE_CHECKBOXES = 'trackerTableCheckboxes_clean';
+        const STORAGE_TABLE_TEXTS = 'trackerTableTexts_clean';
 
-        // ========== ФУНКЦИИ СОХРАНЕНИЯ И ЗАГРУЗКИ ==========
-        
-        // Сохраняет состояние ВСЕХ слотов заклинаний
-        function saveSpellSlots() {
-            const slots = [];
-            document.querySelectorAll('#spellTracker .slot').forEach((slot, index) => {
-                slots.push({
-                    index: index,
-                    checked: slot.classList.contains('checked')
-                });
-            });
-            localStorage.setItem(STORAGE_SPELLS, JSON.stringify(slots));
-        }
+        // ---------- 1. ПОСТРОЕНИЕ ТАБЛИЦЫ (5 строк, 6 колонок) ----------
+        const tableBody = document.getElementById('tableDynamicBody');
+        const ROWS_COUNT = 5;
+        const COLS_COUNT = 6;
 
-        // Загружает состояние слотов заклинаний
-        function loadSpellSlots() {
-            const saved = localStorage.getItem(STORAGE_SPELLS);
-            if (!saved) return;
-            try {
-                const slots = JSON.parse(saved);
-                const allSlots = document.querySelectorAll('#spellTracker .slot');
-                slots.forEach(item => {
-                    if (item.index < allSlots.length && item.checked) {
-                        allSlots[item.index].classList.add('checked');
-                    }
-                });
-            } catch (e) {
-                console.error('Ошибка загрузки слотов:', e);
+        function buildTableHTML() {
+            let html = '';
+            for (let r = 0; r < ROWS_COUNT; r++) {
+                html += '<tr>';
+                // текстовая ячейка
+                html += `<td><textarea class="text-cell" placeholder="Введите текст (до 25)" maxlength="25" rows="1"></textarea></td>`;
+                // чекбоксы-кружки
+                for (let c = 0; c < COLS_COUNT; c++) {
+                    html += `<td><div class="checkbox-container"><div class="circle-checkbox"></div></div></td>`;
+                }
+                html += '</tr>';
             }
+            tableBody.innerHTML = html;
         }
+        buildTableHTML();
 
-        // Сохраняет состояние галочек в таблице
-        function saveTableCheckboxes() {
-            const checkboxes = [];
-            document.querySelectorAll('.container .circle-checkbox').forEach((cb, index) => {
-                checkboxes.push({
-                    index: index,
-                    checked: cb.classList.contains('checked')
-                });
-            });
-            localStorage.setItem(STORAGE_TABLE_CHECKBOXES, JSON.stringify(checkboxes));
+        // получаем элементы таблицы после генерации
+        let tableCheckboxes = [];
+        let tableTextareas = [];
+
+        function refreshTableElements() {
+            tableCheckboxes = Array.from(document.querySelectorAll('.block-card .circle-checkbox'));
+            tableTextareas = Array.from(document.querySelectorAll('.block-card .text-cell'));
         }
+        refreshTableElements();
 
-        // Загружает состояние галочек в таблице
-        function loadTableCheckboxes() {
-            const saved = localStorage.getItem(STORAGE_TABLE_CHECKBOXES);
-            if (!saved) return;
-            try {
-                const checkboxes = JSON.parse(saved);
-                const allCb = document.querySelectorAll('.container .circle-checkbox');
-                checkboxes.forEach(item => {
-                    if (item.index < allCb.length && item.checked) {
-                        allCb[item.index].classList.add('checked');
-                    }
-                });
-            } catch (e) {
-                console.error('Ошибка загрузки галочек таблицы:', e);
-            }
-        }
-
-        // Сохраняет текст из всех textarea в таблице
-        function saveTableTexts() {
-            const texts = [];
-            document.querySelectorAll('.container .text-cell').forEach((ta, index) => {
-                texts.push({
-                    index: index,
-                    value: ta.value
-                });
-            });
-            localStorage.setItem(STORAGE_TABLE_TEXTS, JSON.stringify(texts));
-        }
-
-        // Загружает текст в textarea таблицы
-        function loadTableTexts() {
-            const saved = localStorage.getItem(STORAGE_TABLE_TEXTS);
-            if (!saved) return;
-            try {
-                const texts = JSON.parse(saved);
-                const allTa = document.querySelectorAll('.container .text-cell');
-                texts.forEach(item => {
-                    if (item.index < allTa.length) {
-                        allTa[item.index].value = item.value;
-                        // Подгоняем высоту
-                        allTa[item.index].style.height = 'auto';
-                        allTa[item.index].style.height = allTa[item.index].scrollHeight + 'px';
-                    }
-                });
-            } catch (e) {
-                console.error('Ошибка загрузки текста таблицы:', e);
-            }
-        }
-
-        // Сохраняет ВСЁ
-        function saveAll() {
-            saveSpellSlots();
-            saveTableCheckboxes();
-            saveTableTexts();
-        }
-
-        // Загружает ВСЁ
-        function loadAll() {
-            loadSpellSlots();
-            loadTableCheckboxes();
-            loadTableTexts();
-        }
-
-        // ========== ПОСТРОЕНИЕ ТРЕКЕРА ЗАКЛИНАНИЙ ==========
+        // ---------- 2. ПОСТРОЕНИЕ ТРЕКЕРА ЗАКЛИНАНИЙ (круги + исцеление) ----------
         const circlesData = [];
 
-        // 1. Фокусировка
-        circlesData.push({
-            title: 'Фокусировка',
-            spells: [{ slots: 1 }, { slots: 1 }]
-        });
+        // Фокусировка (2 слота)
+        circlesData.push({ title: 'Фокусировка', spells: [{ slots: 1 }, { slots: 1 }] });
 
-        // 2. Круги 1..8
+        // Круги 1..8 по 3 ячейки
         for (let circle = 1; circle <= 8; circle++) {
             const spells = [];
             for (let s = 1; s <= 3; s++) spells.push({ slots: 1 });
             circlesData.push({ title: `Круг ${circle}`, spells: spells });
         }
 
-        // 3. Круг 9
-        circlesData.push({
-            title: 'Круг 9',
-            spells: [{ slots: 1 }, { slots: 1 }]
-        });
+        // Круг 9 (2 ячейки)
+        circlesData.push({ title: 'Круг 9', spells: [{ slots: 1 }, { slots: 1 }] });
 
         const spellContainer = document.getElementById('spellTracker');
-        if (spellContainer) {
-            function buildSpellTracker() {
-                spellContainer.innerHTML = '';
+        
+        function buildSpellTracker() {
+            if (!spellContainer) return;
+            spellContainer.innerHTML = '';
 
-                circlesData.forEach(circle => {
-                    const card = document.createElement('div');
-                    card.className = 'circle-card';
+            // основные круги
+            circlesData.forEach(circle => {
+                const card = document.createElement('div');
+                card.className = 'circle-card';
 
-                    const header = document.createElement('div');
-                    header.className = 'circle-header';
-                    header.textContent = circle.title;
-                    card.appendChild(header);
+                const header = document.createElement('div');
+                header.className = 'circle-header';
+                header.textContent = circle.title;
+                card.appendChild(header);
 
-                    const row = document.createElement('div');
-                    row.className = 'spells-row';
+                const row = document.createElement('div');
+                row.className = 'spells-row';
 
-                    circle.spells.forEach(spell => {
-                        const spellDiv = document.createElement('div');
-                        spellDiv.className = 'spell-item';
-
-                        const slotGroup = document.createElement('div');
-                        slotGroup.className = 'slot-group';
-
-                        for (let i = 0; i < spell.slots; i++) {
-                            const slot = document.createElement('div');
-                            slot.className = 'slot';
-                            
-                            // При клике: переключаем класс и СОХРАНЯЕМ
-                            slot.addEventListener('click', function(e) {
-                                e.stopPropagation();
-                                this.classList.toggle('checked');
-                                saveAll(); // <-- СОХРАНЕНИЕ
-                            });
-                            
-                            slotGroup.appendChild(slot);
-                        }
-
-                        spellDiv.appendChild(slotGroup);
-                        row.appendChild(spellDiv);
-                    });
-
-                    card.appendChild(row);
-                    spellContainer.appendChild(card);
-                });
-
-                // Исцеление
-                const healCard = document.createElement('div');
-                healCard.className = 'circle-card';
-                const healHeader = document.createElement('div');
-                healHeader.className = 'circle-header';
-                healHeader.textContent = 'Исцеление (круг 9)';
-                healCard.appendChild(healHeader);
-
-                const healInner = document.createElement('div');
-                healInner.className = 'healing-section';
-                const healGrid = document.createElement('div');
-                healGrid.className = 'healing-grid';
-
-                for (let h = 1; h <= 7; h++) {
+                circle.spells.forEach(spell => {
                     const spellDiv = document.createElement('div');
                     spellDiv.className = 'spell-item';
                     const slotGroup = document.createElement('div');
                     slotGroup.className = 'slot-group';
-                    const slot = document.createElement('div');
-                    slot.className = 'slot';
-                    
-                    slot.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        this.classList.toggle('checked');
-                        saveAll(); // <-- СОХРАНЕНИЕ
-                    });
-                    
-                    slotGroup.appendChild(slot);
+                    for (let i = 0; i < spell.slots; i++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'slot';
+                        slot.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            this.classList.toggle('checked');
+                            saveAll();
+                        });
+                        slotGroup.appendChild(slot);
+                    }
                     spellDiv.appendChild(slotGroup);
-                    healGrid.appendChild(spellDiv);
-                }
-
-                healInner.appendChild(healGrid);
-                healCard.appendChild(healInner);
-                spellContainer.appendChild(healCard);
-            }
-
-            buildSpellTracker();
-
-            // Кнопка сброса для заклинаний
-            document.getElementById('resetSpellBtn')?.addEventListener('click', function() {
-                document.querySelectorAll('#spellTracker .slot').forEach(slot => {
-                    slot.classList.remove('checked');
+                    row.appendChild(spellDiv);
                 });
-                saveAll(); // <-- СОХРАНЯЕМ ПОСЛЕ СБРОСА
+                card.appendChild(row);
+                spellContainer.appendChild(card);
+            });
+
+            // блок Исцеление (круг 9) - 7 слотов
+            const healCard = document.createElement('div');
+            healCard.className = 'circle-card';
+            const healHeader = document.createElement('div');
+            healHeader.className = 'circle-header';
+            healHeader.textContent = 'Исцеление (круг 9)';
+            healCard.appendChild(healHeader);
+            const healInner = document.createElement('div');
+            healInner.className = 'healing-section';
+            const healGrid = document.createElement('div');
+            healGrid.className = 'healing-grid';
+            for (let h = 1; h <= 7; h++) {
+                const spellDiv = document.createElement('div');
+                spellDiv.className = 'spell-item';
+                const slotGroup = document.createElement('div');
+                slotGroup.className = 'slot-group';
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('checked');
+                    saveAll();
+                });
+                slotGroup.appendChild(slot);
+                spellDiv.appendChild(slotGroup);
+                healGrid.appendChild(spellDiv);
+            }
+            healInner.appendChild(healGrid);
+            healCard.appendChild(healInner);
+            spellContainer.appendChild(healCard);
+        }
+
+        buildSpellTracker();
+
+        // ---------- 3. ФУНКЦИИ СОХРАНЕНИЯ / ЗАГРУЗКИ ----------
+        function saveSpellSlots() {
+            const slots = [];
+            document.querySelectorAll('#spellTracker .slot').forEach((slot, idx) => {
+                slots.push({ index: idx, checked: slot.classList.contains('checked') });
+            });
+            localStorage.setItem(STORAGE_SPELLS, JSON.stringify(slots));
+        }
+
+        function loadSpellSlots() {
+            const saved = localStorage.getItem(STORAGE_SPELLS);
+            if (!saved) return;
+            try {
+                const slotsData = JSON.parse(saved);
+                const allSlots = document.querySelectorAll('#spellTracker .slot');
+                slotsData.forEach(item => {
+                    if (item.index < allSlots.length && item.checked) {
+                        allSlots[item.index].classList.add('checked');
+                    } else if (item.index < allSlots.length && !item.checked) {
+                        allSlots[item.index].classList.remove('checked');
+                    }
+                });
+            } catch(e) { console.warn(e); }
+        }
+
+        function saveTableCheckboxes() {
+            const checkboxes = [];
+            tableCheckboxes.forEach((cb, idx) => {
+                checkboxes.push({ index: idx, checked: cb.classList.contains('checked') });
+            });
+            localStorage.setItem(STORAGE_TABLE_CHECKBOXES, JSON.stringify(checkboxes));
+        }
+
+        function loadTableCheckboxes() {
+            const saved = localStorage.getItem(STORAGE_TABLE_CHECKBOXES);
+            if (!saved) return;
+            try {
+                const cbData = JSON.parse(saved);
+                cbData.forEach(item => {
+                    if (item.index < tableCheckboxes.length) {
+                        if (item.checked) tableCheckboxes[item.index].classList.add('checked');
+                        else tableCheckboxes[item.index].classList.remove('checked');
+                    }
+                });
+            } catch(e) { console.warn(e); }
+        }
+
+        function saveTableTexts() {
+            const texts = [];
+            tableTextareas.forEach((ta, idx) => {
+                texts.push({ index: idx, value: ta.value });
+            });
+            localStorage.setItem(STORAGE_TABLE_TEXTS, JSON.stringify(texts));
+        }
+
+        function loadTableTexts() {
+            const saved = localStorage.getItem(STORAGE_TABLE_TEXTS);
+            if (!saved) return;
+            try {
+                const textData = JSON.parse(saved);
+                textData.forEach(item => {
+                    if (item.index < tableTextareas.length) {
+                        tableTextareas[item.index].value = item.value;
+                        // автонастройка высоты
+                        tableTextareas[item.index].style.height = 'auto';
+                        tableTextareas[item.index].style.height = tableTextareas[item.index].scrollHeight + 'px';
+                    }
+                });
+            } catch(e) { console.warn(e); }
+        }
+
+        function saveAll() {
+            saveSpellSlots();
+            saveTableCheckboxes();
+            saveTableTexts();
+        }
+
+        function loadAll() {
+            loadSpellSlots();
+            loadTableCheckboxes();
+            loadTableTexts();
+        }
+
+        // ---------- 4. НАВЕШИВАНИЕ СОБЫТИЙ НА ТАБЛИЦУ (динамически) ----------
+        function attachTableEvents() {
+            refreshTableElements();
+            tableCheckboxes.forEach(cb => {
+                // удаляем старые обработчики, чтобы не дублировать
+                cb.removeEventListener('click', checkboxClickHandler);
+                cb.addEventListener('click', checkboxClickHandler);
+            });
+            tableTextareas.forEach(ta => {
+                ta.removeEventListener('input', textareaInputHandler);
+                ta.addEventListener('input', textareaInputHandler);
+                // начальная высота
+                ta.style.height = '35px';
+                ta.style.overflowY = 'auto';
+                if (ta.value) {
+                    ta.style.height = 'auto';
+                    ta.style.height = ta.scrollHeight + 'px';
+                }
             });
         }
 
-        // ========== ТАБЛИЦА ==========
-        const tableCheckboxes = document.querySelectorAll('.container .circle-checkbox');
-        const tableTextareas = document.querySelectorAll('.container .text-cell');
+        function checkboxClickHandler(e) {
+            e.stopPropagation();
+            this.classList.toggle('checked');
+            saveAll();
+        }
 
-        // Галочки в таблице
-        tableCheckboxes.forEach(cb => {
-            cb.addEventListener('click', function() {
-                this.classList.toggle('checked');
-                saveAll(); // <-- СОХРАНЕНИЕ
+        function textareaInputHandler() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            saveAll();
+        }
+
+        // первичный вызов событий
+        attachTableEvents();
+
+        // при изменениях DOM (если нужно перестроить) используем MutationObserver не требуется, просто обновим при сбросе.
+        // но также при загрузке страницы после loadAll()
+        
+        // ---------- 5. КНОПКИ СБРОСА (на верху блоков) ----------
+        const resetSpellBtn = document.getElementById('resetSpellBtnTop');
+        if (resetSpellBtn) {
+            resetSpellBtn.addEventListener('click', () => {
+                // сброс всех слотов заклинаний
+                document.querySelectorAll('#spellTracker .slot').forEach(slot => {
+                    slot.classList.remove('checked');
+                });
+                saveAll();
             });
-        });
+        }
 
-        // Текстовые поля в таблице
-        tableTextareas.forEach(ta => {
-            ta.style.height = '35px';
-            ta.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-                saveAll(); // <-- СОХРАНЕНИЕ ПРИ ВВОДЕ
+        const resetTableBtn = document.getElementById('resetTableBtnTop');
+        if (resetTableBtn) {
+            resetTableBtn.addEventListener('click', () => {
+                refreshTableElements();
+                tableCheckboxes.forEach(cb => cb.classList.remove('checked'));
+                tableTextareas.forEach(ta => {
+                    ta.value = '';
+                    ta.style.height = '35px';
+                });
+                saveAll();
             });
-        });
+        }
 
-        // Кнопка сброса таблицы
-        document.getElementById('resetTableBtn')?.addEventListener('click', function() {
-            tableCheckboxes.forEach(cb => cb.classList.remove('checked'));
-            tableTextareas.forEach(ta => {
-                ta.value = '';
-                ta.style.height = '35px';
-            });
-            saveAll(); // <-- СОХРАНЯЕМ ПОСЛЕ СБРОСА
-        });
-
-        // ========== ЗАГРУЗКА ПРИ СТАРТЕ ==========
+        // ---------- 6. ЗАГРУЗКА ДАННЫХ ПРИ СТАРТЕ ----------
         loadAll();
+        
+        // небольшая синхронизация: после загрузки текстовых полей подстроить высоту
+        setTimeout(() => {
+            refreshTableElements();
+            tableTextareas.forEach(ta => {
+                if (ta.value.trim() !== '') {
+                    ta.style.height = 'auto';
+                    ta.style.height = ta.scrollHeight + 'px';
+                } else {
+                    ta.style.height = '35px';
+                }
+            });
+        }, 20);
 
+        // При изменении размера окна (если текст переносится) пересчитаем высоту для всех textarea (опционально)
+        window.addEventListener('resize', () => {
+            refreshTableElements();
+            tableTextareas.forEach(ta => {
+                if (ta.value) {
+                    ta.style.height = 'auto';
+                    ta.style.height = ta.scrollHeight + 'px';
+                }
+            });
+        });
+        
+        // для гарантии, что если таблица перерисуется динамически (не планируется) — но нет, всё стабильно
+        // также, если кто-то захочет через консоль добавить строки — не поддерживается, но структура фиксирована.
+        // дополнительно: обновляем ссылки на элементы при возможном изменении (например сброс не пересоздаёт dom, всё ок)
+        function syncTableReferences() {
+            refreshTableElements();
+            attachTableEvents();
+        }
+        
+        // если понадобится перепривязка при любых внешних манипуляциях — но в коде нет мутаций,
+        // оставим для подстраховки вызов после загрузки.
+        syncTableReferences();
     })();
 </script>
 </body>
